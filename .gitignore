@@ -1,0 +1,16 @@
+# Local SQLite binary databases
+*.db
+backend-api/logisync.db
+backend-worker/logisync.db
+
+# Frontend dependencies and builds
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+
+# Python caching
+__pycache__/
+*.pyc
+
+# Local environment variables and secrets
+.env
