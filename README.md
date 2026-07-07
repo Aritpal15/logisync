@@ -1,4 +1,4 @@
-# 🚀 LogiSync: Real-Time Logistics Control & Tracking Platform
+# LogiSync: Real-Time Logistics Control & Tracking Platform
 
 LogiSync is a decoupled, event-driven logistics orchestration platform designed for enterprise scalability and 100% AWS Free Tier compliance. It features a modern single-page frontend application interacting with a high-throughput asynchronous API server and an isolated background worker task manager.
 
@@ -6,7 +6,7 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
 
 ## 🗺️ System Architecture
 
-\\\
+\`\`\`
 [ Client Browser ] --- (Port 80/443) ---> [ Nginx Web Server (EC2) ]
                                                    |
                    +-------------------------------+-------------------------------+
@@ -27,11 +27,11 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
                                                                  | (Trigger Event)
                                                                  v
                                                           [ Amazon SNS ] ---> [ Customer Email Notifications ]
-\\\
+\`\`\`
 
 ---
 
-## 🛠️ Tech Stack & Service Blueprint
+## Tech Stack & Service Blueprint
 
 ### Core Software Stack
 * **Frontend:** React.js, Tailwind CSS (Built utilizing native DOM rendering, bypassing heavy compilation tooling constraints).
@@ -63,27 +63,26 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
 * Node.js & npm
 
 ### 1. Backend API Configuration
-\\\ash
+\`\`\`bash
 cd backend-api
 python -m venv venv
 # Windows execution:
 .\\venv\\Scripts\\activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8080
-\\\
+\`\`\`
 
 ### 2. Frontend Deployment Setup
-\\\ash
+\`\`\`bash
 cd frontend
 npm install
 npm start
-\\\
+\`\`\`
 
 ---
 
 ## 🛡️ Cloud Deployment Blueprint (AWS Pipeline)
-1. **Repository Access:** Execute \git clone\ directly inside the Amazon EC2 Linux instance environment.
-2. **Web Serving:** Compile the React layer utilizing \
-pm run build\ and link the output directory to Nginx internal file trackers.
-3. **Daemon Configuration:** Establish the FastAPI and Worker processes as active system processes utilizing standard Linux \systemd\ service manifests.
-4. **Network Security:** Whitelist the internal EC2 private IP within the Amazon RDS Security Group firewalls to block all standard public traffic vectors.
+1. **Repository Access:** Execute \`git clone\` directly inside the Amazon EC2 Linux instance environment.
+2. **Web Serving:** Compile the React layer utilizing \`npm run build\` and link the output directory to Nginx internal file trackers.
+3. **Daemon Configuration:** Establish the FastAPI and Worker processes as active system processes utilizing standard Linux \`systemd\` service manifests.
+4. **Network Security:** Whitelist the internal EC2 private IP within the Amazon RDS Security Group firewalls to block all standard public traffic vectors."
