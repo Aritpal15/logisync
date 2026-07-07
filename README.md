@@ -6,7 +6,7 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
 
 ## 🗺️ System Architecture
 
-\`\`\`
+<pre style="font-family: monospace; font-size: 13px; line-height: 1.2; letter-spacing: 0px;">
 [ Client Browser ] --- (Port 80/443) ---> [ Nginx Web Server (EC2) ]
                                                    |
                    +-------------------------------+-------------------------------+
@@ -27,9 +27,7 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
                                                                  | (Trigger Event)
                                                                  v
                                                           [ Amazon SNS ] ---> [ Customer Email Notifications ]
-\`\`\`
-
----
+</pre>
 
 ## Tech Stack & Service Blueprint
 
