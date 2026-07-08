@@ -18,7 +18,7 @@ export default function ReportsSection() {
   useEffect(() => {
     const fetchHistoricalLedger = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/shipments");
+        const response = await fetch("/api/shipments");
         if (!response.ok) throw new Error("Network database request failed.");
         const data = (await response.ok) ? await response.json() : [];
         setShipments(data);

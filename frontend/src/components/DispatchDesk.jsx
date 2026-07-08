@@ -29,7 +29,8 @@ export default function DispatchDesk() {
 
     try {
       // Connects directly to your local FastAPI server ingestion endpoint
-      const response = await fetch("http://localhost:8080/api/shipments", {
+      // Change to:
+  const response = await fetch("/api/shipments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

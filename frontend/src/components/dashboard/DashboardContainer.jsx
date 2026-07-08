@@ -11,7 +11,7 @@ export default function DashboardContainer() {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/shipments");
+      const response = await fetch("/api/shipments");
       if (!response.ok) throw new Error("Data cluster failure.");
       const data = await response.json();
       setShipments(data);

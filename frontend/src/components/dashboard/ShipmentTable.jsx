@@ -10,7 +10,7 @@ export default function ShipmentTable({ shipments = [] }) {
   const handleStatusChange = async (trackingNumber, newStatus) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/shipments/${trackingNumber}/status`,
+        `/api/shipments/${trackingNumber}/status`,
         {
           method: "PATCH",
           headers: {

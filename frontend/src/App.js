@@ -43,7 +43,7 @@ export default function App() {
 
   const fetchGlobalData = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/shipments");
+      const response = await fetch("/api/shipments");
       if (response.ok) {
         const data = await response.json();
         setShipments(data);
