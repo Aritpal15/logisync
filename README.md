@@ -6,24 +6,25 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
 
 ## 🗺️ System Architecture
 
+## 🗺️ System Architecture
+
 <pre style="font-family: monospace; font-size: 13px; line-height: 1.2; letter-spacing: 0px;">
 [ Client Browser ] --- (Port 80/443) ---> [ Nginx Web Server (EC2) ]
                                                    |
                    +-------------------------------+-------------------------------+
                    | (Static Routing)                                              | (Reverse Proxy API Routing)
                    v                                                               v
-       [ Compiled React Frontend ]                                     [ Python FastAPI / Uvicorn ]
-                                                                                   |
-                                                                        (boto3)    | (SQLAlchemy)
-                                                                 +-----------------+-----------------+
-                                                                 |                                   |
-                                                                 v                                   v
+       [ Compiled React Frontend ]                                     [ Python FastAPI / Uvicorn ] ----+
+                                                                                   |                    |
+                                                                        (boto3)    | (SQLAlchemy)       | (boto3)
+                                                                 +-----------------+-----------------+  |
+                                                                 |                                   |  v
                                                           [ Amazon SQS Queue ]              [ Amazon RDS Postgres ]
-                                                                 |
-                                                                 | (Long Polling)
-                                                                 v
-                                                       [ Background Worker ]
-                                                                 |
+                                                                 |                                      |
+                                                                 | (Long Polling)                       | (boto3)
+                                                                 v                                      v
+                                                       [ Background Worker ] ------------------> [ AWS CloudWatch ]
+                                                                 |                             (Telemetry Logs)
                                                                  | (Trigger Event)
                                                                  v
                                                           [ Amazon SNS ] ---> [ Customer Email Notifications ]
@@ -41,6 +42,7 @@ LogiSync is a decoupled, event-driven logistics orchestration platform designed 
 * **Database Engine:** **Amazon RDS** fully managed PostgreSQL instance isolated from direct public routing.
 * **Message Broker:** **Amazon SQS** handling non-blocking background queue tasks asynchronously.
 * **Notification System:** **Amazon SNS** managing instant customer operational update emails.
+* **Telemetry & Logging:** **AWS CloudWatch** capturing unified system runtime metrics and structured worker process logs.
 
 ---
 
