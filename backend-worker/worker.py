@@ -1,55 +1,71 @@
-import sys
 import os
 import time
-import random
-
-# Adjust python path dynamically so worker can resolve database models if needed,
-# or connect directly using an independent SessionLocal instance.
-# 1. Build the path string pointing to the API directory
-API_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend-api"))
-
-# 2. Append to sys.path so the runtime engine can locate files
-if API_PATH not in sys.path:
-    sys.path.insert(0, API_PATH)
-
-# 3. Direct imports
+import json
+import boto3
 from database import SessionLocal
 import models
-def run_worker_cycle():
+
+# Initialize SQS client
+SQS_QUEUE_URL = "https://sqs.ap-south-1.amazonaws.com/334856751456/logisync-shipment-queue"
+sqs_client = boto3.client("sqs", region_name="ap-south-1")
+
+def process_shipment_lifecycle(shipment_id):
     """
-    Simulates an independent AWS SQS background processor service.
-    It wakes up, checks the shared logisync.db file, and advances a pending item.
+    Simulates the shipping lifecycle quickly so you can take screenshots!
     """
-    print("🤖 LogiSync Worker: Checking message queue state...")
     db = SessionLocal()
     try:
-        # Pull records that aren't finalized yet
-        pending_shipments = db.query(models.Shipment).filter(models.Shipment.status != "DELIVERED").all()
-        
-        if pending_shipments:
-            target_shipment = random.choice(pending_shipments)
-            old_status = target_shipment.status
-            
-            if target_shipment.status == "ORDER_CREATED":
-                target_shipment.status = "PROCESSING"
-            elif target_shipment.status == "PROCESSING":
-                target_shipment.status = "IN_TRANSIT"
-            elif target_shipment.status == "IN_TRANSIT":
-                target_shipment.status = "DELIVERED"
-                
-            db.commit()
-            print(f"⚡ [WORKER MATCH]: Advanced {target_shipment.tracking_number} from {old_status} ➔ {target_shipment.status}")
-        else:
-            print("💤 No pending queue workflows found. System fully synchronized.")
-            
+        shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+        if not shipment:
+            return
+
+        # 1. Move to IN_TRANSIT almost instantly
+        time.sleep(45) 
+        shipment.status = "IN_TRANSIT"
+        db.commit()
+        print(f"📦 Shipment {shipment.tracking_number} is now IN_TRANSIT")
+
+        # 2. Move to DELIVERED quickly right after
+        time.sleep(45)
+        shipment.status = "DELIVERED"
+        db.commit()
+        print(f"✅ Shipment {shipment.tracking_number} is now DELIVERED")
+
     except Exception as e:
-        print(f"❌ Worker Process Exception: {e}")
+        print(f"Error updating lifecycle: {str(e)}")
     finally:
         db.close()
 
-if __name__ == "__main__":
-    print("🚀 LogiSync Background Worker Daemon Initialized Successfully.")
-    print("Simulating event-driven SQS queue loop context. Press Ctrl+C to exit.")
+def poll_queue():
+    print(" SQS Background Worker listening for shipment events...")
     while True:
-        run_worker_cycle()
-        time.sleep(15) # Heartbeat intervals matching blueprint execution sequence
+        try:
+            # Pull messages from Amazon SQS
+            response = sqs_client.receive_message(
+                QueueUrl=SQS_QUEUE_URL,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=5  # Long polling to reduce CPU usage
+            )
+
+            messages = response.get("Messages", [])
+            for message in messages:
+                body = json.loads(message["Body"])
+                shipment_id = body.get("shipment_id")
+                
+                print(f"📥 Received new shipment event from SQS for ID: {shipment_id}")
+                
+                # Process the fast 4-second lifecycle transitions
+                process_shipment_lifecycle(shipment_id)
+
+                # Delete the message from the queue so it isn't processed again
+                sqs_client.delete_message(
+                    QueueUrl=SQS_QUEUE_URL,
+                    ReceiptHandle=message["ReceiptHandle"]
+                )
+
+        except Exception as e:
+            print(f"Worker polling error: {str(e)}")
+            time.sleep(5)
+
+if __name__ == "__main__":
+    poll_queue()
