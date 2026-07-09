@@ -85,3 +85,26 @@ def create_shipment(shipment: schemas.ShipmentCreate, db: Session = Depends(get_
     return db_shipment
 
 # ... keep get_all_shipments, update_shipment_status, and delete_string_shipments exactly as they are!
+
+@app.get("/api/shipments", response_model=List[schemas.ShipmentResponse])
+def get_all_shipments(db: Session = Depends(get_db)):
+    """
+    Retrieves all stored logistics parcel records from the RDS PostgreSQL instance.
+    """
+    return db.query(models.Shipment).all()
+
+@app.put("/api/shipments/{shipment_id}/status", response_model=schemas.ShipmentResponse)
+def update_shipment_status(shipment_id: str, payload: dict, db: Session = Depends(get_db)):
+    """
+    Updates the execution phase state of a targeted parcel tracking lifecycle.
+    """
+    db_shipment = db.query(models.Shipment).filter(models.Shipment.id == shipment_id).first()
+    if not db_shipment:
+        raise HTTPException(status_with=404, detail="Shipment not found")
+    
+    new_status = payload.get("status")
+    if new_status:
+        db_shipment.status = new_status
+        db.commit()
+        db.refresh(db_shipment)
+    return db_shipment
