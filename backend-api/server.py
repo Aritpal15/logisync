@@ -1,4 +1,6 @@
 import uuid
+import json
+import boto3  # <--- Added for AWS integration
 from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -12,6 +14,11 @@ from pydantic import BaseModel
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="LogiSync Ingestion Engine")
+
+# Initialize SQS Client
+# Replace this string with your real Amazon SQS Queue URL from yesterday!
+SQS_QUEUE_URL = "https://sqs.ap-south-1.amazonaws.com/334856751456/logisync-shipment-queue"
+sqs_client = boto3.client("sqs", region_name="ap-south-1")
 
 # Allow connections from React frontend port 3000
 app.add_middleware(
@@ -35,8 +42,8 @@ def get_db():
 @app.post("/api/shipments", response_model=schemas.ShipmentResponse)
 def create_shipment(shipment: schemas.ShipmentCreate, db: Session = Depends(get_db)):
     """
-    Ingests a newly registered logistics parcel from the frontend form submission
-    and permanently writes it down to the SQLite table cluster storage layer.
+    Ingests a newly registered logistics parcel, writes it to RDS,
+    and publishes an optimization event message directly to Amazon SQS.
     """
     generated_id = str(uuid.uuid4())
     generated_tracking = f"LS-{str(uuid.uuid4())[:8].upper()}"
@@ -55,14 +62,28 @@ def create_shipment(shipment: schemas.ShipmentCreate, db: Session = Depends(get_
     db.add(db_shipment)
     db.commit()
     db.refresh(db_shipment)
+
+    # 🚀 AMAZON SQS BROADCAST LOGIC
+    try:
+        message_body = {
+            "shipment_id": db_shipment.id,
+            "tracking_number": db_shipment.tracking_number,
+            "destination": db_shipment.destination_address,
+            "weight": db_shipment.weight
+        }
+        
+        sqs_client.send_message(
+            QueueUrl=SQS_QUEUE_URL,
+            MessageBody=json.dumps(message_body)
+        )
+    except Exception as e:
+        print(f"Failed to broadcast to SQS: {str(e)}")
+        # We don't crash the API response even if queue broadcast fails
+
     return db_shipment
 
 @app.get("/api/shipments", response_model=List[schemas.ShipmentResponse])
 def get_all_shipments(db: Session = Depends(get_db)):
-    """
-    Fetches the active array collection rows out of logisync.db to synchronize
-    the dashboard numbers, table data cells, and donut chart distribution graphs.
-    """
     return db.query(models.Shipment).all()
 
 class StatusUpdate(BaseModel):
@@ -70,10 +91,6 @@ class StatusUpdate(BaseModel):
 
 @app.patch("/api/shipments/{tracking_number}/status", response_model=schemas.ShipmentResponse)
 def update_shipment_status(tracking_number: str, payload: StatusUpdate, db: Session = Depends(get_db)):
-    """
-    Explicit patch endpoint allowing manual row state manipulation via 
-    the select context drop menus inside the custom frontend spreadsheet.
-    """
     db_shipment = db.query(models.Shipment).filter(models.Shipment.tracking_number == tracking_number).first()
     if not db_shipment:
         raise HTTPException(status_code=404, detail="Shipment profile not found.")
@@ -84,11 +101,7 @@ def update_shipment_status(tracking_number: str, payload: StatusUpdate, db: Sess
 
 @app.delete("/api/shipments/clear-test")
 def delete_string_shipments(db: Session = Depends(get_db)):
-    """
-    Administrative macro tool utility to instantly scrub automated mock data 
-    strings created during API document exploratory testing sequences.
-    """
-    test_records = db.query(models.Shipment).filter(models.Shipment.sender_name == "string").all()
+    test_records = db.query(models.Shipment).filter(models.Sender_name == "string").all()
     count = len(test_records)
     for record in test_records:
         db.delete(record)
