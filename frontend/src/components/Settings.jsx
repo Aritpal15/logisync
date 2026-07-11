@@ -180,7 +180,7 @@ export default function SettingsPortal({ shipments = [] }) {
                   <span>API_CORE</span>
                 </div>
                 <span className="text-zinc-200 font-bold">
-                  FastAPI (Uvicorn:8080)
+                  FastAPI (Uvicorn:8000)
                 </span>
               </div>
 
@@ -191,7 +191,7 @@ export default function SettingsPortal({ shipments = [] }) {
                   <span>DATABASE_RELATIONAL</span>
                 </div>
                 <span className="text-zinc-200 font-bold">
-                  SQLite Node (Local)
+                  Amazon RDS (PostgreSQL)
                 </span>
               </div>
 

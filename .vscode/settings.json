@@ -3,6 +3,7 @@
     "anyio",
     "Arit",
     "Aritpal",
+    "ASGI",
     "asgiref",
     "autoflush",
     "Bengaluru",
@@ -12,6 +13,7 @@
     "colorama",
     "dateutil",
     "dnspython",
+    "FANOUT",
     "FASTAPI",
     "Glassmorphic",
     "Glassmorphism",
@@ -23,6 +25,7 @@
     "noto",
     "onupdate",
     "psycopg",
+    "pycache",
     "Pydantic",
     "sessionmaker",
     "sqlparse",
@@ -31,6 +34,7 @@
     "subcomponents",
     "tzdata",
     "urllib",
-    "Uvicorn"
+    "Uvicorn",
+    "venv"
   ]
 }
